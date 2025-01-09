@@ -1,0 +1,17 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjYwMjMsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg0NTYxMzExNjFmODNDN0Q3ZkRBMTViMzJhNWY3QzIxRkQ0RTI3RTk2In0",
+    "payload": "eyJkb21haW4iOiJpc3Mub3JiaXRlci53ZWJzaXRlIn0",
+    "signature": "MHg1OTkwYTBkYmMwNDcwMWU0MzMwNmQ2ZmQ3ODM2NTA4ZWVhNzgyMDdhM2ExYjMxYjYwN2FmNGVhM2M4MmVmZmQ3MjhiOGI2MzQxN2RjYTEyMjFiNDA4ZGVkOGEyNWI3NWYzMDdhYTlkNmQyYTZlOWRlYTg2OGYzNDk1MmFhNjgwNzFj"
+  },
+  "frame": {
+    "version": "1",
+    "name": "Orbiter ISS",
+    "iconUrl": "https://iss.orbiter.website/icon.png",
+    "homeUrl": "https://iss.orbiter.website",
+    "imageUrl": "https://iss.orbiter.website/og.png",
+    "buttonTitle": "LAUNCH",
+    "splashImageUrl": "https://iss.orbiter.website/icon.png",
+    "splashBackgroundColor": "#ffffff"
+  }
+}
