@@ -195,21 +195,16 @@ function Scene() {
 function App() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [context, setContext] = useState<any>();
-  const [error, setError] = useState<string>();
 
 
   useEffect(() => {
     const load = async () => {
       try {
-        console.log("Starting to load SDK context...");
         const ctx = await sdk.context;
-        console.log("SDK Context loaded:", ctx);
         setContext(ctx);
         await sdk.actions.ready();
-        console.log("SDK Ready action called");
       } catch (err) {
         console.error("Error loading SDK context:", err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
       }
     };
 
@@ -220,22 +215,6 @@ function App() {
     }
   }, [isSDKLoaded]);
 
-  // Show loading state
-  if (!isSDKLoaded) {
-    return <div className="text-white">Loading SDK...</div>;
-  }
-
-  // Show error state
-  if (error) {
-    return <div className="text-red-500">Error: {error}</div>;
-  }
-
-  // Show loading context state
-  if (!context) {
-    return <div className="text-white">Loading context...</div>;
-  }
-
-  console.log("Rendering with context:", context);
   return (
     <div className="min-h-screen w-full bg-black relative">
       <a
@@ -260,7 +239,7 @@ function App() {
         <fog attach="fog" args={['#000000', 5, 15]} />
         <Scene />
       </Canvas>
-      {context.user.username && (
+      {context?.user?.username && (
         <ScrollingBanner name={context?.user.username} />
       )}
 
