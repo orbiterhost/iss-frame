@@ -12,6 +12,6 @@
     "imageUrl": "https://iss.orbiter.website/og.png",
     "buttonTitle": "LAUNCH",
     "splashImageUrl": "https://iss.orbiter.website/icon.png",
-    "splashBackgroundColor": "#ffffff"
+    "splashBackgroundColor": "#000000"
   }
 }

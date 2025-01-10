@@ -1,38 +1,41 @@
 import { useRef, useEffect, useState } from 'react'
 import { sdk } from "@farcaster/frame-sdk";
-import { Canvas, useLoader, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Stars } from '@react-three/drei'
 import axios from 'axios'
 import * as THREE from 'three'
 import "./index.css"
 
-// Import textures
-import earthMapTexture from './assets/00_earthmap1k.jpg'
-import earthBumpTexture from './assets/01_earthbump1k.jpg'
-import earthSpecTexture from './assets/02_earthspec1k.jpg'
-import earthLightsTexture from './assets/03_earthlights1k.jpg'
-import cloudsMapTexture from './assets/04_earthcloudmap.jpg'
-import cloudsAlphaTexture from './assets/05_earthcloudmaptrans.jpg'
+function ScrollingBanner({ name }: { name?: string }) {
+  const [position, setPosition] = useState(window.innerWidth);
+
+  const username = name?.trim() || "EXPLORER";
+
+  useEffect(() => {
+    const animate = () => {
+      setPosition(prev => {
+        if (prev < -1000) return window.innerWidth;
+        return prev - 2;
+      });
+    };
+    const interval = setInterval(animate, 30);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="fixed bottom-0 w-full bg-black h-8 border-t-2 border-b-2 border-cyan-500 overflow-hidden">
+      <div
+        className="text-cyan-500 font-['VT323'] text-xl whitespace-nowrap"
+        style={{ transform: `translateX(${position}px)` }}
+      >
+        * * * WELCOME {username.toUpperCase()} TO THE INTERNATIONAL SPACE STATION TRACKER * * * REAL-TIME SATELLITE POSITIONING SYSTEM * * * CYBERDECK STATUS: ONLINE * * *
+      </div>
+    </div>
+  );
+}
+
 
 function Earth() {
-  // Load textures
-  const [
-    earthMap,
-    bumpMap,
-    specMap,
-    lightsMap,
-    cloudsMap,
-    cloudsAlpha
-  ] = useLoader(THREE.TextureLoader, [
-    earthMapTexture,
-    earthBumpTexture,
-    earthSpecTexture,
-    earthLightsTexture,
-    cloudsMapTexture,
-    cloudsAlphaTexture
-  ])
-
-  earthMap.colorSpace = THREE.SRGBColorSpace
 
   const earthRef = useRef<THREE.Mesh>(null)
   const cloudsRef = useRef<THREE.Mesh>(null)
@@ -73,41 +76,30 @@ function Earth() {
 
   return (
     <group rotation={[0, initialRotation, -23.4 * Math.PI / 180]}>
-      {/* Earth Base */}
+      {/* Earth Base - now with wireframe */}
       <mesh ref={earthRef}>
-        <icosahedronGeometry args={[1, 12]} />
-        <meshPhongMaterial
-          map={earthMap}
-          bumpMap={bumpMap}
-          bumpScale={0.04}
-          specularMap={specMap}
-        />
-      </mesh>
-
-      {/* Night Lights */}
-      <mesh ref={lightsRef}>
-        <icosahedronGeometry args={[1, 12]} />
+        <icosahedronGeometry args={[1, 6]} /> {/* Reduced geometry complexity */}
         <meshBasicMaterial
-          map={lightsMap}
-          blending={THREE.AdditiveBlending}
+          wireframe={true}
+          wireframeLinewidth={1}
+          color={0x00ff00}
         />
       </mesh>
 
-      {/* Clouds Layer */}
-      <mesh ref={cloudsRef} scale={1.003}>
-        <icosahedronGeometry args={[1, 12]} />
-        <meshStandardMaterial
-          map={cloudsMap}
-          alphaMap={cloudsAlpha}
+      {/* Simplified night lights */}
+      <mesh ref={lightsRef}>
+        <icosahedronGeometry args={[1, 6]} />
+        <meshBasicMaterial
+          color={0x00ffff}
+          wireframe={true}
+          opacity={0.3}
           transparent={true}
-          opacity={0.8}
-          blending={THREE.AdditiveBlending}
         />
       </mesh>
 
-      {/* Atmosphere Glow */}
-      <mesh ref={glowRef} scale={1.01}>
-        <icosahedronGeometry args={[1, 12]} />
+      {/* Retro-style atmosphere */}
+      <mesh ref={glowRef} scale={1.02}>
+        <icosahedronGeometry args={[1, 6]} />
         <shaderMaterial
           vertexShader={`
             varying vec3 vNormal;
@@ -119,12 +111,12 @@ function Earth() {
           fragmentShader={`
             varying vec3 vNormal;
             void main() {
-              float intensity = pow(0.7 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
-              gl_FragColor = vec4(0.3, 0.6, 1.0, 1.0) * intensity;
+              float intensity = pow(0.7 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 1.0);
+              gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0) * intensity;
             }
           `}
           blending={THREE.AdditiveBlending}
-          side={THREE.BackSide}
+          wireframe={true}
           transparent={true}
         />
       </mesh>
@@ -132,22 +124,19 @@ function Earth() {
   )
 }
 
-function ISS({ position, pfpUrl }: { position: [number, number, number], pfpUrl: string }) {
-  const texture = useLoader(THREE.TextureLoader, pfpUrl)
-
+function ISS({ position }: { position: [number, number, number] }) {
   return (
     <mesh position={position}>
-      <sphereGeometry args={[0.1, 32, 32]} />
-      <meshPhongMaterial
-        map={texture}
-        emissive={new THREE.Color(0xffffff)}
-        emissiveIntensity={0.01}
+      <boxGeometry args={[0.2, 0.2, 0.2]} /> {/* Changed to box for more retro feel */}
+      <meshBasicMaterial
+        color={0xffffff}
+        wireframe={true}
       />
     </mesh>
-  )
+  );
 }
 
-function Scene({ pfpUrl }: { pfpUrl: string }) {
+function Scene() {
   const [issPosition, setIssPosition] = useState<[number, number, number]>([2, 0, 0]);
 
   useEffect(() => {
@@ -189,7 +178,7 @@ function Scene({ pfpUrl }: { pfpUrl: string }) {
       <ambientLight intensity={0.1} />
       <directionalLight position={sunPosition} intensity={2.0} />
       <Earth />
-      <ISS position={issPosition} pfpUrl={pfpUrl} />
+      <ISS position={issPosition} />
       <Stars radius={100} depth={50} count={2000} factor={4} saturation={0} />
       <OrbitControls
         enableZoom={true}
@@ -206,27 +195,75 @@ function Scene({ pfpUrl }: { pfpUrl: string }) {
 function App() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [context, setContext] = useState<any>();
+  const [error, setError] = useState<string>();
+
 
   useEffect(() => {
     const load = async () => {
-      setContext(await sdk.context);
-      sdk.actions.ready();
+      try {
+        console.log("Starting to load SDK context...");
+        const ctx = await sdk.context;
+        console.log("SDK Context loaded:", ctx);
+        setContext(ctx);
+        await sdk.actions.ready();
+        console.log("SDK Ready action called");
+      } catch (err) {
+        console.error("Error loading SDK context:", err);
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      }
     };
+
     if (sdk && !isSDKLoaded) {
+      console.log("SDK available, starting load...");
       setIsSDKLoaded(true);
       load();
     }
   }, [isSDKLoaded]);
 
+  // Show loading state
   if (!isSDKLoaded) {
-    return <div>Loading...</div>;
+    return <div className="text-white">Loading SDK...</div>;
   }
 
+  // Show error state
+  if (error) {
+    return <div className="text-red-500">Error: {error}</div>;
+  }
+
+  // Show loading context state
+  if (!context) {
+    return <div className="text-white">Loading context...</div>;
+  }
+
+  console.log("Rendering with context:", context);
   return (
-    <div className="min-h-screen w-full bg-black">
+    <div className="min-h-screen w-full bg-black relative">
+      <a
+        href="https://orbiter.host"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed top-4 right-4 z-50 border-2 border-cyan-500 bg-black p-3 rounded-lg transition-transform duration-300"
+      >
+        <div className="animate-pulse text-cyan-500 font-['VT323'] text-sm">
+          HOSTED ON
+        </div>
+        <div className="animate-[pulse_1.5s_ease-in-out_infinite] text-yellow-400 font-['VT323'] text-lg font-bold">
+          ORBITER.HOST
+        </div>
+        <div className="text-[8px] text-cyan-500 mt-1 text-center animate-[pulse_2s_ease-in-out_infinite]">
+          ★★★ LAUNCH YOUR SITE ★★★
+        </div>
+      </a>
+
       <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
-        <Scene pfpUrl={context?.pfpUrl || 'https://orbiter.host/og.png'} />
+        <color attach="background" args={['#000000']} />
+        <fog attach="fog" args={['#000000', 5, 15]} />
+        <Scene />
       </Canvas>
+      {context.user.username && (
+        <ScrollingBanner name={context?.user.username} />
+      )}
+
     </div>
   )
 }
